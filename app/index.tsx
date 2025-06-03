@@ -1,15 +1,15 @@
-import { Text, View } from "react-native";
+import { Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { isSignedUp } from '../utils/storage';
 
 export default function Index() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+  const [signedUp, setSignedUp] = useState<null | boolean>(null);
+
+  useEffect(() => {
+    isSignedUp().then(setSignedUp);
+  }, []);
+
+  if (signedUp === null) return null;
+
+  return <Redirect href={signedUp ? '/home' : '/welcome'} />;
 }
