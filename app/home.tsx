@@ -1,16 +1,44 @@
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Button, Image, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import { USERS } from "../constants/users";
+//import { USERS } from "../constants/users";
 import { resetSignup } from "../utils/storage";
 
 export default function HomeScreen() {
   const router = useRouter();
+  // Define the type
+  type User = {
+    id: string;
+    name: string;
+    avatar: string;
+    bio: string;
+    location: {
+      latitude: number;
+      longitude: number;
+    };
+  };
 
   const logout = async () => {
     await resetSignup();
     router.replace("/welcome");
   };
+
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/users");
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to load users", err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
     <View style={styles.screen}>
@@ -29,7 +57,7 @@ export default function HomeScreen() {
           longitudeDelta: 0.01,
         }}
       >
-        {USERS.map((user) => (
+        {users.map((user) => (
           <Marker
             key={user.id}
             coordinate={user.location}
