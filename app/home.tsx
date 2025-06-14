@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button, Image, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 //import { USERS } from "../constants/users";
+import { API_BASE_URL } from "../constants/config";
 import { resetSignup } from "../utils/storage";
 
 export default function HomeScreen() {
@@ -29,7 +30,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch("http://localhost:3001/users");
+        const res = await fetch(`${API_BASE_URL}/users`);
         const data = await res.json();
         setUsers(data);
       } catch (err) {
@@ -51,11 +52,17 @@ export default function HomeScreen() {
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: 51.045,
-          longitude: -114.057,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitude: 51.0447, //  set Alberta as default
+          longitude: -114.0719,
+          latitudeDelta: 10.0, // Zoom level large enough to show the province
+          longitudeDelta: 10.0,
         }}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
+        zoomEnabled={true}
+        scrollEnabled={true}
+        rotateEnabled={true}
+        pitchEnabled={true}
       >
         {users.map((user) => (
           <Marker

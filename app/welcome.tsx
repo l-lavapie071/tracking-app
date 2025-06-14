@@ -2,6 +2,7 @@ import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Button, StyleSheet, TextInput, View } from "react-native";
+import { API_BASE_URL } from "../constants/config";
 import { setSignedUp } from "../utils/storage";
 
 export default function WelcomeScreen() {
@@ -27,9 +28,7 @@ export default function WelcomeScreen() {
       //Alert.alert("g", githubData.login);
 
       // Check if user already exists in backend
-      const existingRes = await fetch(
-        `http://172.16.35.4:3001/users/${cleanedId}`
-      );
+      const existingRes = await fetch(`${API_BASE_URL}/users/${cleanedId}`);
       if (existingRes.ok) {
         Alert.alert("Already Registered", "This user is already signed up.");
         await setSignedUp(cleanedId);
@@ -64,7 +63,7 @@ export default function WelcomeScreen() {
 
       //Alert.alert("User ID", `${JSON.stringify(user)}`);
       // Save to JSON Server
-      const apiRes = await fetch("http://172.16.35.4:3001/users", {
+      const apiRes = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
@@ -76,8 +75,8 @@ export default function WelcomeScreen() {
       await setSignedUp(user.id);
       router.replace("/home");
     } catch (err) {
-      //console.error(err);
-      //Alert.alert("Signup Failed", "Something went wrong during sign up.");
+      console.error(err);
+      Alert.alert("Signup Failed", "Something went wrong during sign up.");
     }
   };
 
