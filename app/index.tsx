@@ -1,6 +1,6 @@
-import { Redirect } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { isSignedUp } from '../utils/storage';
+import { Redirect } from "expo-router";
+import { useEffect, useState } from "react";
+import { isSignedUp } from "../utils/storage";
 
 export default function Index() {
   const [signedUp, setSignedUp] = useState<null | boolean>(null);
@@ -11,5 +11,5 @@ export default function Index() {
 
   if (signedUp === null) return null;
 
-  return <Redirect href={signedUp ? '/home' : '/welcome'} />;
+  return <Redirect href={signedUp ? "/home" : "/welcome"} />;
 }

@@ -1,12 +1,27 @@
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Button, StyleSheet, TextInput, View } from "react-native";
+import {
+  Alert,
+  Button,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { API_BASE_URL } from "../constants/config";
 import { setSignedUp } from "../utils/storage";
 
 export default function WelcomeScreen() {
   const [userId, setUserId] = useState("");
+  const [region, setRegion] = useState({
+    latitude: 54.526, // North America center
+    longitude: -105.2551,
+    latitudeDelta: 40,
+    longitudeDelta: 60,
+  });
   const router = useRouter();
 
   const handleSignUp = async () => {
@@ -29,11 +44,23 @@ export default function WelcomeScreen() {
 
       // Check if user already exists in backend
       const existingRes = await fetch(`${API_BASE_URL}/users/${cleanedId}`);
+
       if (existingRes.ok) {
-        Alert.alert("Already Registered", "This user is already signed up.");
-        await setSignedUp(cleanedId);
-        router.replace("/home");
-        return;
+        let existingUser = null;
+        try {
+          existingUser = await existingRes.json();
+        } catch (e) {
+          // JSON parse failed, treat as no user found
+          existingUser = null;
+        }
+
+        // Check if existingUser is not null and not empty object
+        if (existingUser && Object.keys(existingUser).length > 0) {
+          Alert.alert("Already Registered", "This user is already signed up.");
+          await setSignedUp(cleanedId);
+          router.replace("/home");
+          return;
+        }
       }
 
       //Get current location
@@ -61,6 +88,21 @@ export default function WelcomeScreen() {
         location: coords,
       };
 
+      /* useEffect(() => {
+        (async () => {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === "granted") {
+            const location = await Location.getCurrentPositionAsync({});
+            setRegion({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 1.0,
+              longitudeDelta: 1.0,
+            });
+          }
+        })();
+      }, []);
+ */
       //Alert.alert("User ID", `${JSON.stringify(user)}`);
       // Save to JSON Server
       const apiRes = await fetch(`${API_BASE_URL}/users`, {
@@ -82,31 +124,66 @@ export default function WelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Your GitHub Username"
-        value={userId}
-        onChangeText={setUserId}
-        autoCapitalize="none"
-      />
-      <Button title="Sign Up" onPress={handleSignUp} />
+      <MapView style={StyleSheet.absoluteFillObject} region={region}>
+        <Marker coordinate={region} />
+      </MapView>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.overlay}
+      >
+        <View style={styles.formBox}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter GitHub Username"
+            value={userId}
+            onChangeText={setUserId}
+            autoCapitalize="none"
+          />
+          <View style={styles.buttonWrapper}>
+            <Button title="Sign Up" onPress={handleSignUp} />
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+  container: {
+    flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end", // push to bottom
+    alignItems: "center",
+    paddingBottom: 40, // space from bottom
+  },
+  formBox: {
+    width: "90%",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    elevation: 6,
   },
   input: {
+    width: "100%",
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: "#fff",
+    fontSize: 16,
+  },
+  buttonWrapper: {
+    width: "100%",
+    marginTop: 8,
   },
 });
